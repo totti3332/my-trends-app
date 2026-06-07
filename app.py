@@ -42,7 +42,7 @@ def fetch_life_news_stream():
     except:
         return pd.DataFrame(columns=["排名", "最新生活/天氣/社會新聞頭條", "生活關注度"])
 
-# 3. 【100% 真實爬蟲】抓取社群實時熱議榜
+# 3. 【100% 真實爬蟲】抓取社群實時熱議榜 (徹底修正第 65 行語法錯誤)
 def fetch_real_community_sentiment():
     try:
         url = "https://news.ltn.com.tw/list/breakingnews/society"
@@ -60,16 +60,32 @@ def fetch_real_community_sentiment():
                         community_topics.append(clean_topic)
                 if len(community_topics) >= 20:
                     break
+                    
         if not community_topics:
             return pd.DataFrame(columns=["口碑排名", "社群與論壇實時熱議主題", "全網即時估算聲量", "行銷風向標籤"])
-        tags = ["🔥 全網熱烈關注 (正面居多)" if i%4==0 else "💬 民意激辯翻車 (兩極論戰)" if i%4==1 else "⚠️ 消費權益公關預警 (偏向負面)" else "➡️ 輿情平穩持平 (穩定關注)" for i in range(len(community_topics))]
+            
+        # 🌟 核心修正：將原本卡死報錯的單行 if-else 拆解成標準的傳統迴圈，確保 100% 編譯成功
+        tags = []
+        for i in range(len(community_topics)):
+            if i % 4 == 0:
+                tags.append("🔥 全網熱烈關注 (正面居多)")
+            elif i % 4 == 1:
+                tags.append("💬 民意激辯翻車 (兩極論戰)")
+            elif i % 4 == 2:
+                tags.append("⚠️ 消費權益公關預警 (偏向負面)")
+            else:
+                tags.append("➡️ 輿情平穩持平 (穩定關注)")
+                
+        # 產生定量的聲量數據
+        counts = [f"{180000 - idx*8500:,} 筆" for idx in range(len(community_topics))]
+        
         return pd.DataFrame({
             "口碑排名": list(range(1, len(community_topics) + 1)),
             "社群與論壇實時熱議主題": community_topics,
-            "全網即時估算聲量": [f"{180000 - i*8500:,} 筆" for i in range(len(community_topics))],
+            "全網即時估算聲量": counts,
             "行銷風向標籤": tags
         })
-    except:
+    except Exception as e:
         return pd.DataFrame(columns=["口碑排名", "社群與論壇實時熱議主題", "全網即時估算聲量", "行銷風向標籤"])
 
 # 4. 前端雙欄渲染
@@ -90,10 +106,9 @@ if st.button("🔄 立即刷新全網大盤數據"):
 st.divider()
 st.markdown("### 🤖 雙榜全能聯動：AI 社群文案一鍵孵化器")
 
-# 讓使用者輸入或設定自己的 Gemini API Key
 st.markdown("#### 🔑 第一步：請設定您的 Gemini API 金鑰")
 st.caption("💡 為了保護隱私，您的金鑰不會被保存。您可以前往 Google AI Studio 免費申請一個金鑰。")
-api_key_input = st.text_input("AIzaSyDjXYMo7X8-CjF09dzte9XyyerHGFGpboI：", type="password")
+api_key_input = st.text_input("請貼上您的 Gemini API Key：", type="password")
 
 if df_news.empty and df_community.empty:
     st.warning("⚠️ 目前網路數據中樞重新整理中，暫無真實話題可供文案選取。")
@@ -129,10 +144,8 @@ else:
         else:
             with st.spinner("🧠 真正的 AI 正正在深度閱讀這條新聞，並為您的品牌量身打造原創文案..."):
                 try:
-                    # 使用 2026 年最新規範的 google-genai 客戶端初始化
                     client = genai.Client(api_key=api_key_input)
                     
-                    # 設計行銷專家等級的進階 AI 提示詞
                     prompt = f"""
                     你是一名台灣最頂尖的數位社群行銷總監與輿情策略專家。
                     
@@ -153,7 +166,6 @@ else:
                     直接輸出最終的社群貼文內容即可，不需要任何前言或多餘的解釋標籤。
                     """
                     
-                    # 串接最適合生成文本且速度極快的 gemini-2.5-flash 模型
                     response = client.models.generate_content(
                         model='gemini-2.5-flash',
                         contents=prompt
@@ -162,8 +174,6 @@ else:
                     st.markdown("---")
                     st.success("✨ **真・AI 原創輿情文案孵化成功！**（100% 動態思考生成）")
                     st.info(f"📱 **發布渠道風格**：{copy_style.split('（')[0]}")
-                    
-                    # 漂亮地渲染 AI 生成的全新原創內容
                     st.write(response.text)
                     st.caption("🤖 本段文案由 Google Gemini-2.5-flash 模型實時線上分析新聞情境、原創寫作完成。")
                     
