@@ -17,7 +17,7 @@ st.divider()
 
 # 🔑 請設定您的 Gemini API 金鑰 (移到最上方，因為過濾大盤就需要大腦)
 st.markdown("#### 🔑 第一步：請設定您的 Gemini API 金鑰（啟動 AI 智慧過濾引擎）")
-api_key_input = st.text_input("projects/116839878608", type="password")
+api_key_input = st.text_input("請貼上您的 Gemini API Key 來解鎖精準輿情大盤：", type="password")
 
 # 2. 原生抓取原始大盤數據
 def fetch_raw_news_titles():
